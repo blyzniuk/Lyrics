@@ -1,5 +1,9 @@
+#!/usr/bin/python3
+
 import urllib.request
+import sys
 from bs4 import BeautifulSoup
+from pymongo import MongoClient
 from string import ascii_lowercase
 
 #artist_name: {song_name: {language: text}}
@@ -11,7 +15,7 @@ def get_all_categories():
     for i in range(1, 10):
         categories.append(i)
     for i in ascii_lowercase:
-        categories.append(i)
+         categories.append(i)
     return categories
 
 def get_artists(category):
@@ -46,33 +50,58 @@ def get_text(soup, className):
 
 def get_song(song_href):
     soup = BeautifulSoup(get_html(song_href[1:])).find('div', class_='texts col')
-    origin_name = soup.find('h2', class_='original').contents[0]
-    ru_name = soup.find('h2', class_='translate').text
-    origin_text = get_text(soup.find('div', {'id': 'click_area'}), 'original')
-    ru_text = get_text(soup.find('div', {'id': 'click_area'}), 'translate')
-    return {
-        'name': origin_name,
-        'ru_name': ru_name,
-        'text': origin_text,
-        'ru_text': ru_text
+    
+    original = {
+        'name': soup.find('h2', class_='original').contents[0].lower(),
+        'text': get_text(soup.find('div', {'id': 'click_area'}), 'original')
     }
+    translation = {
+        'name': soup.find('h2', class_='translate').text,
+        'text': get_text(soup.find('div', {'id': 'click_area'}), 'translate')
+    }
+    
+    return {
+        'original': original,
+        'translation': translation
+    }
+
+def write_to_db(db, collection, items):
+    db[collection].insert_many(items)
 
 def get_html(url):
     response = urllib.request.urlopen(BASE_URL + url)
     return response.read()
 
 def main():
+    client = MongoClient('mongodb')
+    db = client['lyrics']
     categories = get_all_categories()
     artists = []
+    exeptions = []
+
     for category in categories:
-       artists.extend(get_artists(category))
+        artists.extend(get_artists(category))
+
+    count = len(artists)
     
-    for artist in artists:
-        songs_list = get_songs_list(artist.href)
+    for index, artist in enumerate(artists):
+        print(index, '/', count, artist)
+        songs_list = get_songs_list(artist['href'])
+        songs = []
         for song_href in songs_list:
-            song = get_song(artist.href + song_href)
-            print();
-            # write_to_db(artist.name, song)
+            songs.append(get_song(artist['href'] + song_href))
+        try:
+            write_to_db(db, artist['name'], songs)
+        except :
+            exeptions.append({
+                'artist': artist,
+                'exeption': sys.exc_info()
+            })
+            print(sys.exc_info())
+            pass
+
+    for i in exeptions:
+        print(i)
 
 if __name__ == '__main__':
     main()
