@@ -65,40 +65,40 @@ def get_song(song_href):
         'translation': translation
     }
 
-def write_to_db(db, collection, items):
-    db[collection].insert_many(items)
+def write_to_db(db, collection, name, items):
+    db[str(collection)].insert_one({name: items})
 
 def get_html(url):
     response = urllib.request.urlopen(BASE_URL + url)
     return response.read()
 
 def main():
-    client = MongoClient('mongodb')
+    client = MongoClient('mongodb://')
     db = client['lyrics']
     categories = get_all_categories()
-    artists = []
     exeptions = []
+    total_index = 0
 
     for category in categories:
-        artists.extend(get_artists(category))
-
-    count = len(artists)
-    
-    for index, artist in enumerate(artists):
-        print(index, '/', count, artist)
-        songs_list = get_songs_list(artist['href'])
-        songs = []
-        for song_href in songs_list:
-            songs.append(get_song(artist['href'] + song_href))
-        try:
-            write_to_db(db, artist['name'], songs)
-        except :
-            exeptions.append({
-                'artist': artist,
-                'exeption': sys.exc_info()
-            })
-            print(sys.exc_info())
-            pass
+        artists = get_artists(category)
+        count = len(artists)
+        
+        for index, artist in enumerate(artists):
+            print(index + total_index, '/', '8876', count, artist)
+            songs_list = get_songs_list(artist['href'])
+            songs = []
+            for song_href in songs_list:
+                songs.append(get_song(artist['href'] + song_href))
+            try:
+                write_to_db(db, category, artist['name'], songs)
+            except :
+                exeptions.append({
+                    'artist': artist,
+                    'exeption': sys.exc_info()
+                })
+                print(sys.exc_info())
+                pass
+        total_index += count        
 
     for i in exeptions:
         print(i)
