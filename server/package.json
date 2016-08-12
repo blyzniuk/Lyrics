@@ -1,0 +1,29 @@
+{
+    "name": "lyrics_api_server",
+    "version": "1.0.0",
+    "dependencies": {
+        "body-parser": "^1.15.0",
+        "errorhandler": "^1.4.3",
+        "express": "^4.13.4",
+        "lodash": "^4.6.1",
+        "method-override": "^2.3.5",
+        "mongodb": "^2.2.5",
+        "path": "^0.12.7",
+        "q": "^1.4.1"
+    },
+    "description": "Api server with lyrics for mobile player",
+    "devDependencies": {
+        "morgan": "^1.7.0"
+    },
+    "engines": {
+        "node": ">=5.0.0"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/blyzniuk/Lyrics/server"
+    },
+    "scripts": {
+        "start": "node server.js"
+    }
+}
