@@ -1,12 +1,19 @@
 'use strict';
 
 const express = require('express');
-const port = require('./config/').port;
+const config = require('./config/');
+
+const mongoose = require('mongoose');
+mongoose.Promise = require('q').Promise;
+
+mongoose.connect(config.mongoUrl, (err) => {
+    err ? console.error(err) : console.log('mongo connected');
+});
 
 const app = express();
 const server = require('http').createServer(app);
 
-require('./mongo').connectDB();
+// const getLyricsLibraryContent = require('./getLyricsLibraryContent');
 
 require('./config/express')(app);
 
@@ -16,6 +23,6 @@ app.use('*', (req, res) => {
     res.status(404).json({ "error": "not found" });
 });
 
-app.listen(port, (err) => {
-    err ? console.error(err) : console.log('Express server listening on port ' + port);
+app.listen(config.port, (err) => {
+    err ? console.error(err) : console.log('Express server listening on port ' + config.port);
 });
